@@ -1,0 +1,131 @@
+﻿@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}
+
+@{
+    if (!WebSecurity.IsAuthenticated) {
+      Response.Redirect("~/Account/Login.cshtml");
+      Response.End();}
+    Page.Title = "Place Your Order";
+
+    var db = Database.Open("ShopCU");
+    var productId = UrlData[0].AsInt();
+    var price = Request["price"].AsDecimal();
+    var quantity = Request["orderQty"].AsInt();
+    var commandText = string.Empty;
+    var totalItems = 0;   
+    var message="";
+     var user= WebSecurity.CurrentUserId;
+    var query= "select CartId from Cart where UserId=@0";
+   var cartId=db.QueryValue(query,user);
+    commandText = "SELECT * FROM PRODUCTS WHERE ID = @0";
+    var product = db.QuerySingle(commandText, productId);
+    if (product == null) {
+        Response.Redirect("~/");
+    }
+  
+        
+        commandText = "SELECT SUM(Quantity) AS TotalItems FROM CartItems WHERE CartId = @0";
+        object result = db.QueryValue(commandText, cartId);
+        totalItems = result == DBNull.Value ? 0 : Convert.ToInt32(result);
+
+
+        //quantity issue
+        var command = "Select Quantity FROM Products WHERE Id = @0";
+       var available= db.QueryValue(command,productId);
+
+    if(IsPost && quantity > 0 && quantity<=available) {
+     
+        commandText = "SELECT Quantity FROM CartItems WHERE CartId = @0 AND ProductId = @1";
+        var reduction = db.QueryValue(commandText, cartId, productId);
+        if(reduction != null){
+            totalItems -= reduction;
+        }
+
+        //Reduce quantity from total quantity in table
+       var rem= available-quantity;
+       commandText = "UPDATE Products SET Quantity=@0 WHERE Id=@1";
+        db.Execute(commandText,rem,productId);
+
+        //Remove from cart
+        commandText = "DELETE FROM CartItems WHERE CartId = @0 AND ProductId = @1";
+        db.Execute(commandText, cartId, productId);
+
+        commandText = "INSERT INTO CartItems (CartId, ProductId, Quantity, Price) VALUES (@0, @1, @2, @3)";
+        db.Execute(commandText, cartId, productId, quantity, price);
+        totalItems += quantity;
+       
+    }
+    else if(IsPost && quantity>available){
+            
+            message="Sorry, Quantity demanded not available";
+        }
+}
+
+<ol id="orderProcess">
+    <li><span class="step-number">1</span><a href="~/">Choose Item</a></li>
+    <li class="current"><span class="step-number">2</span>Place Order</li>
+    <li><span class="step-number">3</span><a href="~/ReviewCart">Review Cart</a></li>
+</ol>
+
+<h1>Place Your Order: @product.Name</h1>
+<form action="" method="post">
+    <fieldset class="no-legend">
+        <legend>Place Your Order</legend>
+        <img class="product-image order-image" src="~/Images/Products/Thumbnails/@product.ImageName" alt="Image of @product.Name"/>
+        <ul class="orderPageList" data-role="listview">
+            <li>
+                <div>
+                    <p class="description">@product.Description</p>
+                    <p>@message</p>
+                </div>                
+            </li>
+            <li class="quantity">
+                <div class="fieldcontainer" data-role="fieldcontain">
+                    <label for="orderQty">Quantity</label>
+                    <input type="text" id="orderQty" name="orderQty" value="@(quantity == 0 ? 1 : quantity)"/>
+                    x
+                    <span id="orderPrice">@string.Format("{0:f}", product.Price)</span>
+                    =
+                    <span id="orderTotal">@string.Format("{0:f}", quantity == 0 ? product.Price : quantity * product.Price)</span>
+                </div>
+            </li>
+        </ul>
+        <p class="actions">
+            <input type="hidden" name="productId" value="@product.Id" />
+            <input type="hidden" name="price" value="@product.Price" />
+            @if(!IsPost){
+                <input type="submit" value="Place Order" data-role="none" data-inline="true"/>
+            }
+        </p>
+        <div id="basket">
+            @if(totalItems > 0){
+                <text>Your cart contains <strong>@totalItems</strong> items</text>
+            }
+            
+            <a class="order-button" href="~/">Continue Shopping</a>
+             
+        </div>
+        
+    </fieldset>
+</form>
+
+<script type="text/javascript">
+    $(function () {
+        var price = parseFloat($("#orderPrice").text()).toFixed(2),
+            total = $("#orderTotal"),
+            orderQty = $("#orderQty");
+
+        orderQty.change(function () {
+            var quantity = parseInt(orderQty.val());
+            if (!quantity || quantity < 1) {
+                orderQty.val(1);
+                quantity = 1;
+            } else if (quantity.toString() !== orderQty.val()) {
+                orderQty.val(quantity);
+            }
+            total.text("$" + (price * quantity).toFixed(2));
+        });
+    });
+</script>

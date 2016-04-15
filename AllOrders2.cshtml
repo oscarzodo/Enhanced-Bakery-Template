@@ -1,0 +1,63 @@
+﻿@{
+     if (!WebSecurity.IsAuthenticated) {
+      Response.Redirect("~/Account/Login.cshtml");
+     Response.End();}
+    //  if ( !Roles.IsUserInRole("Admin2")) {Response.Redirect("~/AdminError");}
+
+    Page.Title = "All Orders";
+    
+    
+    var db = Database.Open("ShopCU");
+     int defvalue=0;
+     int section=2;
+     var cmd= "SELECT b.OrderItemID, b.OrderID,c.OrderDate, d.Name, d.Address, a.Name AS foodname, b.Price, b.Quantity, b.Quantity * b.Price Total FROM OrderDetails b, Orders c, Products a, UserProfile d WHERE(b.OrderID=c.OrderID and b.ProductID=a.Id and c.UserID=d.UserId and b.Shipped=@0 and a.Section=@1)";
+     var order=db.Query(cmd,defvalue,section);
+
+   if(IsPost){
+       int setvalue=1;
+        cmd ="UPDATE OrderDetails SET Shipped=@0 WHERE OrderItemID=@1";
+        db.Execute(cmd,setvalue, Request["orderid"]);
+         Response.Redirect("~/Allorders2.cshtml");
+       
+        
+    }
+
+}
+
+
+<div class="container">
+<h2><label>ORDERS</label></h2>
+    <h2><a href="~/AllOrders2"><span class="glyphicon glyphicon-refresh"></span></a></h2>
+    <table class="table table-Responsive" >
+            <tr>
+               <th>OrderID</th>
+                <th>Order Date</th>
+                 <th>Customer Name</th>
+                <th>Address</th>
+                <th>Product Name</th>
+                <th>PRICE(&#8358;)</th>
+                 <th>Quantity</th>
+                 <th>Total</th>
+                <th>&nbsp;</th>
+            </tr>
+     
+@foreach(var item in order){
+     <tr>
+         <td><span class="glyphicon glyphicon-pushpin"></span>@item.OrderID</td>
+         <td>@item.OrderDate</td>
+         <td>@item.Name</td>
+         <td>@item.Address</td>
+          <td>@item.foodname</td>
+         <td>&#8358;@item.Price</td>
+         <td>@item.Quantity</td>
+         <td>@item.Total</td>
+         <td><form method="post">
+              <input type="hidden" value="@item.OrderItemID" name="orderid" />
+              <input type="submit" value="Done" />
+              </form></td>
+        
+     </tr>
+}
+</table>
+
+</div>

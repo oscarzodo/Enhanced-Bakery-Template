@@ -1,0 +1,39 @@
+﻿@{
+    
+    Page.Title = "Home";
+  
+     var db = Database.Open("ShopCU");
+     int section=2;
+    var cmd = "SELECT * FROM PRODUCTS Where Section=@0";
+    var products=db.Query(cmd,section).ToList();
+
+
+}
+<h1>Mall</h1>
+<div id="productsWrapper">
+    <ul id="products" data-role="listview" data-inset="true">
+        @foreach (var p in products) {
+            <li class="product">
+                <a href="~/order/@p.Id" title="Order @p.Name">
+                    <img class="hide-from-desktop" src="~/Images/Products/Thumbnails/@p.ImageName" alt="Image of @p.Name" />
+                
+                    <div class="productInfo">
+                        <h3>@p.Name</h3>
+                        <img class="product-image hide-from-mobile" src="~/Images/Products/Thumbnails/@p.ImageName" alt="Image of @p.Name" />
+                        <p class="description">@p.Description</p>
+                        <p class="description">Quantity @p.Quantity</p>
+                        <p class="price hide-from-desktop">&#8358;@p.Price</p>                    
+                    </div>
+                </a>
+
+                <!-- Desktop only -->
+                <div class="action  hide-from-mobile">
+                    <p class="price">&#8358;@p.Price</p>
+                    <a class="order-button" href="~/order/@p.Id" title="Order @p.Name">Add To Cart</a>
+                </div>
+                 
+            </li>
+
+        }
+    </ul>
+</div>

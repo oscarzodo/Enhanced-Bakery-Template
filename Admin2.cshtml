@@ -1,0 +1,42 @@
+﻿@{
+  
+     if (!WebSecurity.IsAuthenticated) {
+      Response.Redirect("~/Account/Login.cshtml");
+      Response.End();}
+      if ( !Roles.IsUserInRole("Admin2")){Response.Redirect("~/AdminError");}
+     
+    Page.Title = "Admin";
+    var db = Database.Open("ShopCU");
+    int section=2;
+    List<dynamic> products = new List<dynamic>();
+    var cmd = "SELECT * FROM PRODUCTS Where Section=@0";
+     products=db.Query(cmd,section).ToList();    
+}
+
+  
+<div class="container">
+<h2><label>WELCOME MALL ADMIN</label></h2>
+    <table class="table table-Responsive" >
+     
+            <tr>
+               <th>Name</th>
+                <th>DESCRIPTION</th>
+                <th>PRICE(&#8358;)</th>
+                <th>ImageName</th>
+                <th>Quantity</th>
+                <th>&nbsp;</th>
+            </tr>
+     
+@foreach(var item in products){
+     <tr>
+         <td>@item.Name</td>
+         <td>@item.Description</td>
+         <td>&#8358;@item.Price</td>
+         <td>@item.ImageName</td>
+         <td>@item.Quantity</td>
+         <td><link /><a href="/update2.cshtml?id=@item.Id">Update</a></td>
+     </tr>
+}
+</table>
+
+</div>

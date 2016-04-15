@@ -1,0 +1,79 @@
+@{
+   
+   
+}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Nonye Kitchen - @Page.Title</title>
+        <link href="~/Content/themes/base/jquery.ui.all.css" rel="stylesheet" type="text/css" />
+       <link href="~/Content/Site.css" rel="stylesheet" />
+       <link rel="stylesheet" href="Content/bootstrap/css/bootstrap.min.css">
+        <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+        <script src="~/Scripts/modernizr-2.6.2.js"></script>
+        <script src="~/Scripts/test.js"></script>
+        <script src="~/Scripts/jquery-ui-1.8.24.js"></script>
+        <script src="~/Scripts/jquery-1.8.2.min.js"></script>
+        
+    </head>
+    <body>
+        <div id="page">
+            <header>
+                @*<p class="site-title"><a href="~/">Nonye's Kitchen</a></p>*@
+                <nav>
+                    <ul>
+                        @if (WebSecurity.IsAuthenticated) 
+                        {
+                         var db = Database.Open("ShopCU");
+                         var user= WebSecurity.CurrentUserId;
+                         var query= "select CartId from Cart where UserId=@0";
+                         var cartId=db.QueryValue(query,user);
+                         var commandText = "SELECT SUM(Quantity) AS TotalItems FROM CartItems WHERE CartId = @0";
+                        object result = db.QueryValue(commandText, cartId);
+                        var totalItems = result == DBNull.Value ? 0 : Convert.ToInt32(result);
+                         if(Roles.IsUserInRole("Admin1")){
+                           <li><a href="Add1.cshtml">Add Item</a></li>
+                          <li><a href="AllOrders1.cshtml">ORDERS</a></li>
+                           <li><a href="~/Admin1">Admin</a></li> 
+                         
+                         }
+                         else if(Roles.IsUserInRole("Admin2")){
+                         <li><a href="Add2.cshtml">Add Item</a></li>
+                         <li><a href="AllOrders2.cshtml">ORDERS</a></li>
+                         <li><a href="~/Admin2">Admin</a></li> 
+                         
+                         }
+                         <li><a href="~/Mall">Visit Mall</a></li>
+                        <li><a href="~/ReviewCart">Cart(@totalItems)</a></li>
+                        <li>Hello,@WebSecurity.CurrentUserName</li>
+                        <li><form id="logoutForm" action="~/Account/Logout" method="post">
+                        @AntiForgery.GetHtml()
+                        <a href="javascript:document.getElementById('logoutForm').submit()">Log out</a>
+                        </form></li>
+                         
+                        
+                        }
+                        else
+                        {
+                           
+                        <li><a href="~/">Home</a></li>
+                         <li><a href="~/Mall">Visit Mall</a></li>
+                        <li><a href="~/About">About Us</a></li>
+                        <li><a href="~/Account/Login.cshtml">Login</a></li>
+                         <li><a href="~/Account/Register.cshtml">Register</a></li>
+                        }
+          
+                    </ul>
+                </nav>
+            </header>
+            <div id="body">
+                @RenderBody()
+            </div>
+            <footer>
+                &copy;@DateTime.Now.Year - Nonye's Kitchen. Developed by floatr
+            </footer>
+            @RenderSection("Scripts", required: false)
+        </div>
+    </body>
+</html>

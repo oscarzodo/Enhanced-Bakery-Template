@@ -1,0 +1,77 @@
+@{
+
+}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>My Mobile Web Page - @Page.Title</title> 
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">        
+        <link rel="stylesheet" href="~/Content/jquery.mobile-1.0.min.css" />
+        <link rel="stylesheet" href="~/Content/Site.mobile.css" />
+        <link rel="stylesheet" href="Content/bootstrap/css/bootstrap.min.css">
+        <script src="~/Scripts/modernizr-2.6.2.js"></script>
+        <script src="~/Scripts/jquery-1.8.2.min.js"></script>
+        <script src="~/Scripts/jquery.mobile-1.0.min.js"></script>
+        @RenderSection("Scripts", required: false)
+    </head>
+    <body>
+        <div data-role="page" data-theme="m">
+            <div data-role="header" data-theme="m">
+                <h1 id="header"><a href="~/">ShopCU</a></h1>
+
+                <div id="nav" data-role="navbar">
+                    <ul>
+                         @if (WebSecurity.IsAuthenticated) 
+                        {
+                        var db = Database.Open("ShopCU");
+                        var user= WebSecurity.CurrentUserId;
+                        bool check=false;
+                     var query= "select CartId from Cart where UserId=@0";
+                     var cartId=db.QueryValue(query,user);
+                     var commandText = "SELECT SUM(Quantity) AS TotalItems FROM CartItems WHERE CartId = @0";
+                     object result = db.QueryValue(commandText, cartId);
+                     var totalItems = result == DBNull.Value ? 0 : Convert.ToInt32(result);
+                           if(Roles.IsUserInRole("Admin1")){
+                            <li><a href="Add1.cshtml">Add Item</a></li>
+                           <li><a href="AllOrders1.cshtml">ORDERS</a></li>
+                            <li><a href="~/Admin1">Admin</a></li> 
+                         
+                         }
+                         else if(Roles.IsUserInRole("Admin2")){
+                         <li><a href="Add2.cshtml">Add Item</a></li>
+                         <li><a href="AllOrders2.cshtml">ORDERS</a></li>
+                         <li><a href="~/Admin2">Admin</a></li> 
+                         
+                         }
+                         <li><a href="~/Mall">Visit Mall</a></li>
+                        <li><a href="~/ReviewCart">Cart(@totalItems)</a></li>
+                        <li>Hello, @WebSecurity.CurrentUserName</li>
+                        <li><form id="logoutForm" action="~/Account/Logout" method="post">
+                        @AntiForgery.GetHtml()
+                        <a href="javascript:document.getElementById('logoutForm').submit()">Log out</a>
+                        </form></li>
+                     
+                        }
+                        else
+                        {
+                           
+                        <li><a href="~/">Home</a></li>
+                        <li><a href="~/Mall">Visit Mall</a></li>
+                        <li><a href="~/About">About Us</a></li>
+                        <li><a href="~/Account/Login.cshtml">Login</a></li>
+                        <li><a href="~/Account/Register.cshtml">Register</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            
+            <div data-role="content" data-theme="m">    
+                @RenderBody()
+            </div>
+            <footer>
+                &copy;@DateTime.Now.Year - ShopCU. Developed by floatr
+            </footer>
+        </div>
+    </body>
+</html>

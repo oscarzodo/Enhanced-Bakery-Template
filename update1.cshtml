@@ -1,0 +1,93 @@
+﻿@{
+    var food= Request.QueryString["Id"];
+       if (!WebSecurity.IsAuthenticated) {
+      Response.Redirect("~/Account/Login.cshtml");
+      Response.End();}
+       if ( !Roles.IsUserInRole("Admin1")) {Response.Redirect("~/AdminError");}
+    Page.Title = "Update";
+    var db = Database.Open("ShopCU");
+     var cmd= "SELECT * FROM PRODUCTS WHERE Id=@0";
+     var products= db.Query(cmd,food).ToList();
+     var name="";
+     var price="";
+     WebImage photo=null;
+     var newFileName="";
+     var quantity="";
+     var description="";
+     var image="";
+     if(IsPost){
+         if(Request["button"].Equals("update")){
+             name = Request.Form["name"];
+               price= Request.Form["price"];
+                quantity= Request.Form["quantity"];
+                 description= Request.Form["description"];
+                 image = Request.Form["image"];
+                 photo=WebImage.GetImageFromRequest();
+                  if(photo != null)
+             {
+            newFileName= Guid.NewGuid().ToString()+ "_" +Path.GetFileName(photo.FileName);
+            image=newFileName;
+            photo.Save(@"~\Images\Products\Thumbnails\" + image);
+            photo.Save(@"~\Images\Products\" + image);
+           }    
+           image=image;
+         var commandText = "UPDATE Products SET Name=@0,Description=@1,Price=@2,ImageName=@3,Quantity=@4 WHERE Id=@5";
+        db.Execute(commandText,name,description,price,image,quantity,food);
+        Context.RedirectLocal("~/Admin1.cshtml");
+         }
+         if(Request["button"].Equals("delete")){
+             
+             var commandText = "DELETE FROM Products Where Id=@0";
+        db.Execute(commandText,food);
+        Context.RedirectLocal("~/Admin1.cshtml");
+         }
+       }
+}
+
+<div class="container">
+    <form method="post" enctype="multipart/form-data">
+    @foreach(var det in products){
+        
+					
+					<h2><label>Product Information</label></h2>
+					
+					
+   	           <div class="row">
+                    
+						<div class="col-md-4">
+							<div class="form-group">
+								<input type="text" Name="name" Value="@det.Name" class="form-control">
+							</div>
+						</div> 
+                       <div class="col-md-4">
+							<div class="form-group">
+								<input type="number" min="0" Name="price" Value="@det.Price" class="form-control">
+							</div>
+						</div>
+                      <div class="col-md-4">
+							<div class="form-group">
+								<input type="number" min="0" Name="quantity" Value="@det.Quantity" class="form-control">
+							</div>
+						</div>
+						
+                      
+                       
+					</div>
+                     <br>
+                      <div class="row">
+						<div class="col-md-4">
+							<div class="form-group">
+								<Textarea Name="description" rows="3" Placeholder="@det.Description"  class="form-control"></Textarea>
+							</div>
+						</div>
+                        
+                        <div class="col-md-4">
+							<div class="form-group">
+								<input type="file" id="image" value="@det.ImageName"  name="image" />
+							</div>
+						</div>
+					</div>
+}
+        <button type="submit" class="btn btn-primary btn-block" name="button" value="update">Update!</button><button type="submit" class="btn btn-primary btn-block" name="button" value="delete">Delete!</button>
+</form>
+</div>

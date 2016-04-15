@@ -1,0 +1,88 @@
+﻿@{
+    
+       if (!WebSecurity.IsAuthenticated) {
+      Response.Redirect("~/Account/Login.cshtml");
+      Response.End();}
+
+      if ( !Roles.IsUserInRole("Admin1")) {Response.Redirect("~/AdminError");}
+    Page.Title = "Add";
+    
+     var name="";
+     var price="";
+     WebImage photo=null;
+     var newFileName="";
+     var quantity="";
+     var description="";
+     var image="";
+     if(IsPost){
+             name = Request.Form["name"];
+               price= Request.Form["price"];
+                quantity= Request.Form["quantity"];
+                 description= Request.Form["description"];
+                 image = Request.Form["image"];
+                 photo=WebImage.GetImageFromRequest();
+                  if(photo != null)
+             {
+            newFileName= Guid.NewGuid().ToString()+ "_" +Path.GetFileName(photo.FileName);
+            image=newFileName;
+             photo.Save(@"~\Images\Products\" + image);  
+             photo.Save(@"~\Images\Products\Thumbnails\" + image);
+       
+           }    
+           image=image;
+           int section=1;
+         var commandText = "Insert into Products (Name,Description,Price,ImageName,Quantity,Section) Values(@0,@1,@2,@3,@4,@5)";
+         var db = Database.Open("ShopCU");
+        db.Execute(commandText,name,description,price,image,quantity,section);
+        Context.RedirectLocal("~/Admin1.cshtml");
+         
+      
+       }
+}
+
+
+<div class="container">
+    <form method="post" enctype="multipart/form-data">
+		
+					<h2><label>Add New Food</label></h2>
+					
+					
+   	           <div class="row">
+                    
+						<div class="col-md-4">
+							<div class="form-group">
+								<input type="text" Name="name" Placeholder="Name.." class="form-control">
+							</div>
+						</div> 
+                       <div class="col-md-4">
+							<div class="form-group">
+								<input type="number" min="0" Name="price" Placeholder="(&#8358;) Price"  class="form-control">
+							</div>
+						</div>
+                      <div class="col-md-4">
+							<div class="form-group">
+								<input type="number" min="0" Name="quantity" Placeholder="Quantity...(Eg. 100)" class="form-control">
+							</div>
+						</div>
+						
+                      
+                       
+					</div>
+                     <br>
+                      <div class="row">
+						<div class="col-md-4">
+							<div class="form-group">
+								<Textarea Name="description" rows="3" Placeholder="Food Description..."  class="form-control"></Textarea>
+							</div>
+						</div>
+                        
+                        <div class="col-md-4">
+							<div class="form-group">
+								<input type="file" id="image" placeholder="Product Image"  name="image" />
+							</div>
+						</div>
+					</div>
+
+        <button type="submit" class="btn btn-primary btn-block" name="button" value="update">Add!</button>
+    </form>
+</div>

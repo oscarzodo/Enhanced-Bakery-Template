@@ -1,0 +1,34 @@
+﻿@{
+    Page.Title = "Order Succeeded!";
+     if (!WebSecurity.IsAuthenticated) {
+        Response.Redirect("~/Account/Login.cshtml");
+        Response.End();}
+         var user= WebSecurity.CurrentUserId;
+         var db = Database.Open("ShopCU");
+         ////////////Get cartid/////////////////////////
+         var cmd1="select CartId from Cart where UserId=@0";
+         var cartid = db.QueryValue(cmd1, user);
+         ///insert into order table///
+         var cmd3="Insert Into Orders(UserId,OrderDate) Values (@0,GetDate())";
+         db.Execute(cmd3,user);
+         var orderid = (int)db.GetLastInsertId();
+         ///insert into orderdetails table///
+         var cmd4="Insert Into OrderDetails(ProductID,Quantity,Price,OrderID) Select CartItems.ProductId,CartItems.Quantity,CartItems.Price,@0 from CartItems where CartItems.CartId=@1";
+         db.Execute(cmd4,orderid,cartid);
+          ///Clear Cartitems table where cartid =userid//
+          var cmd5="Delete From CartItems Where CartId=@0";
+          db.Execute(cmd5,cartid);
+
+          
+}
+<ol id="orderProcess">
+ 
+    <li class="current"><span class="step-number">3</span>Receipt</li>
+</ol>
+<h1>Order Confirmation</h1>
+
+
+    <div class="message order-success">
+        <h2>Thank you for your order!</h2>
+        <p>We are processing your order and you will receive Your package in less than 30 Minutes. Thank you for your business and enjoy!</p>
+    </div>

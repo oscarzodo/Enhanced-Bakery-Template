@@ -1,0 +1,103 @@
+@{
+    
+    Page.Title = "Home";
+  
+    var db = Database.Open("ShopCU");
+    int section=1;
+    var cmd = "SELECT * FROM PRODUCTS Where Section=@0";
+    var products=db.Query(cmd,section).ToList();
+
+    // Serialize the products list
+    var json = Json.Encode(products);
+}
+
+<h1>Welcome to ShopCU!</h1>
+
+<!-- The main product section -->
+<div id="featuredProduct">
+    <img id="myImage" alt="Featured Product" src="#"/>
+    <div id="featuredProductInfo">
+        <div id="productInfo">
+            <h2 id="pname"></h2>
+            <p class="price" id="pprice"></p>
+            <p class="description" id="pdescr"></p>
+        </div>
+        <div id="callToAction">
+            <a id="plink" class="order-button" href="" title="">Add To Cart</a>
+        </div>
+    </div>
+</div>
+
+<div id="productsWrapper">
+    <ul id="products" data-role="listview" data-inset="true">
+        @foreach (var p in products) {
+            <li class="product">
+                <a href="~/order/@p.Id" title="Order @p.Name">
+                    <img class="hide-from-desktop" src="~/Images/Products/Thumbnails/@p.ImageName" alt="Image of @p.Name" />
+                
+                    <div class="productInfo">
+                        <h3>@p.Name</h3>
+                        <img class="product-image hide-from-mobile" src="~/Images/Products/Thumbnails/@p.ImageName" alt="Image of @p.Name" />
+                        <p class="description">@p.Description</p>
+                        <p class="description">@p.Quantity Plates</p>
+                        <p class="price hide-from-desktop">&#8358;@p.Price</p>                    
+                    </div>
+                </a>
+
+                <!-- Desktop only -->
+                <div class="action  hide-from-mobile">
+                    <p class="price">&#8358;@p.Price</p>
+                    <a class="order-button" href="~/order/@p.Id" title="Order @p.Name">Add To Cart</a>
+                </div>
+                 
+            </li>
+
+        }
+    </ul>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+
+        var delay = 5000; //set delay in milliseconds
+        var curindex = 0;
+
+        // Use Html.Raw to pass the JSON-encoded data
+        var prods = @Html.Raw(json);
+
+        // Preload graphic files
+        var preload = new Array();
+        for (n = 0; n < prods.length; n++) {
+            preload[n] = new Image();
+            preload[n].src = "Images/Products/" + prods[n].ImageName;
+        }
+
+        // Randomly select a new product
+        function rotateimage() {
+            if (curindex == (tempindex = Math.floor(Math.random() * (prods.length)))) {
+                curindex = curindex == 0 ? 1 : curindex - 1;
+            }
+            else {
+                curindex = tempindex;
+            }
+            changeProduct(curindex);
+        }
+
+        // Display product's data
+        function changeProduct(pIndex) {
+            $("#myImage").attr("src", "Images/Products/" + prods[pIndex].ImageName);
+            $('#pname').text(prods[pIndex].Name);
+            $('#pprice').text( "N"+prods[pIndex].Price);
+            $('#pdescr').text(prods[pIndex].Description);
+            $("#plink").attr("href", "/order/" + prods[pIndex].Id);
+            $("#plink").attr("title", "Order " + prods[pIndex].Name);
+        }
+
+        // Load first product and set the sliding effect
+        $(document).ready(function () {
+            var imgIndex = Math.floor(Math.random() * (prods.length));
+            changeProduct(imgIndex);
+            setInterval("rotateimage()", delay);
+        });
+    </script>
+}
